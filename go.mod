@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/sagernet/sing v0.4.1
 	github.com/stretchr/testify v1.9.0
+	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e // lastest version compatible with golang1.20
 )
 
 require (

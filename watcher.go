@@ -1,17 +1,15 @@
 package fswatch
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/sagernet/sing/common"
-	E "github.com/sagernet/sing/common/exceptions"
-	"github.com/sagernet/sing/common/logger"
-
 	"github.com/fsnotify/fsnotify"
+	"golang.org/x/exp/slices"
 )
 
 const DefaultWaitTimeout = 100 * time.Millisecond
@@ -23,7 +21,7 @@ type Watcher struct {
 	watchPath   []string
 	callback    func(path string)
 	waitTimeout time.Duration
-	logger      logger.Logger
+	logger      Logger
 	watcher     *fsnotify.Watcher
 }
 
@@ -44,7 +42,11 @@ type Options struct {
 
 	// Logger is the logger to log errors
 	// optional
-	Logger logger.Logger
+	Logger Logger
+}
+
+type Logger interface {
+	Error(args ...any)
 }
 
 func NewWatcher(options Options) (*Watcher, error) {
@@ -59,10 +61,15 @@ func NewWatcher(options Options) (*Watcher, error) {
 	if options.Direct {
 		watchTarget = options.Path
 	} else {
-		watchTarget = common.Uniq(common.Map(options.Path, filepath.Dir))
-		// TODO: update sing to use common.Remove when it's stable
-		watchTarget = common.Filter(watchTarget, func(it string) bool {
-			return !common.Any(watchTarget, func(path string) bool {
+		for _, path := range options.Path {
+			path = filepath.Dir(path)
+			if slices.Contains(watchTarget, path) { // unique
+				continue
+			}
+			watchTarget = append(watchTarget, path)
+		}
+		watchTarget = slices.DeleteFunc(watchTarget, func(it string) bool {
+			return slices.ContainsFunc(watchTarget, func(path string) bool {
 				return len(path) > len(it) && strings.HasPrefix(path, it)
 			})
 		})
@@ -80,12 +87,12 @@ func NewWatcher(options Options) (*Watcher, error) {
 func (w *Watcher) Start() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return E.Cause(err, "fswatch: create fsnotify watcher")
+		return fmt.Errorf("fswatch: create fsnotify watcher %w", err)
 	}
 	for _, target := range w.watchTarget {
 		err = watcher.Add(target)
 		if err != nil {
-			return E.Cause(err, "fswatch: watch ", target)
+			return fmt.Errorf("fswatch: watch %s %w", target, err)
 		}
 	}
 	w.watcher = watcher
@@ -94,7 +101,10 @@ func (w *Watcher) Start() error {
 }
 
 func (w *Watcher) Close() error {
-	return common.Close(common.PtrOrNil(w.watcher))
+	if watcher := w.watcher; watcher != nil {
+		return watcher.Close()
+	}
+	return nil
 }
 
 func (w *Watcher) loopUpdate() {
@@ -106,11 +116,11 @@ func (w *Watcher) loopUpdate() {
 			if !loaded {
 				return
 			}
-			if common.Contains(w.watchTarget, event.Name) && (event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove)) {
+			if slices.Contains(w.watchTarget, event.Name) && (event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove)) {
 				if w.logger != nil {
 					w.logger.Error("fswatch: watcher removed: ", event.Name)
 				}
-			} else if common.Contains(w.watchPath, event.Name) && (event.Has(fsnotify.Create) || event.Has(fsnotify.Write)) {
+			} else if slices.Contains(w.watchPath, event.Name) && (event.Has(fsnotify.Create) || event.Has(fsnotify.Write)) {
 				timerAccess.Lock()
 				timer := timerMap[event.Name]
 				if timer != nil {
