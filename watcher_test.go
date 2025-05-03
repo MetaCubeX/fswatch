@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sagernet/fswatch"
+	"github.com/metacubex/fswatch"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestFileWatcher(t *testing.T) {
 	t.Parallel()
-	tempDir, err := os.MkdirTemp("", "sing-box-file-watcher-test")
+	tempDir, err := os.MkdirTemp("", "file-watcher-test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 	watchPath := filepath.Join(tempDir, "test")
@@ -64,7 +64,7 @@ func TestFileWatcher(t *testing.T) {
 
 func TestWatchDirect(t *testing.T) {
 	t.Parallel()
-	tempDir, err := os.MkdirTemp("", "sing-box-file-watcher-test")
+	tempDir, err := os.MkdirTemp("", "file-watcher-test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 	watchPath := filepath.Join(tempDir, "test")

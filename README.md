@@ -1,8 +1,8 @@
 # fswatch
 
-![Test](https://github.com/sagernet/fswatch/actions/workflows/test.yml/badge.svg)
-![Lint](https://github.com/sagernet/fswatch/actions/workflows/lint.yml/badge.svg)
-[![Go Reference](https://pkg.go.dev/badge/github.com/sagernet/fswatch.svg)](https://pkg.go.dev/github.com/sagernet/fswatch)
+![Test](https://github.com/metacubex/fswatch/actions/workflows/test.yml/badge.svg)
+![Lint](https://github.com/metacubex/fswatch/actions/workflows/lint.yml/badge.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/metacubex/fswatch.svg)](https://pkg.go.dev/github.com/metacubex/fswatch)
 
 fswatch is a simple [fsnotify] wrapper to watch file updates correctly.
 
@@ -12,7 +12,7 @@ Install
 ---
 
 ```bash
-go get github.com/sagernet/fswatch
+go get github.com/metacubex/fswatch
 ```
 
 Example
@@ -24,7 +24,7 @@ package main
 import (
 	"log"
 
-	"github.com/sagernet/fswatch"
+	"github.com/metacubex/fswatch"
 )
 
 func main() {
